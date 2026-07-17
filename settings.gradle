@@ -25,4 +25,8 @@ pluginManagement {
 }
 
 rootProject.name = 'Emojiful'
-include("Common", "Fabric", "Forge")
+include("Common", "Forge")
+
+if (!gradle.startParameter.projectProperties.containsKey("forgeOnly")) {
+    include("Fabric")
+}
