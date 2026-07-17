@@ -175,6 +175,9 @@ public class EmojiSelectionGui extends IDrawableGuiListener {
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
+        if (!showingSelectionArea) {
+            return false;
+        }
         if (categorySelectionArea.contains((int) mouseX, (int) mouseY)) {
             categoryPointer -= delta;
             categoryPointer = Mth.clamp(categoryPointer, 0, ClientEmojiHandler.CATEGORIES.size() - 7);

@@ -52,7 +52,10 @@ public class EmojifulChatScreen extends ChatScreen {
 
     @Override
     public boolean mouseScrolled(double x, double y, double scrollDelta) {
-        return super.mouseScrolled(x, y, scrollDelta) && (emojiSelectionGui != null) && emojiSelectionGui.mouseScrolled(x, y, scrollDelta);
+        if (emojiSelectionGui != null && emojiSelectionGui.mouseScrolled(x, y, scrollDelta)) {
+            return true;
+        }
+        return super.mouseScrolled(x, y, scrollDelta);
     }
 
     @Override

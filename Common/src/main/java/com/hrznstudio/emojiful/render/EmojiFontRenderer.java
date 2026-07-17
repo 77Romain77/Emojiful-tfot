@@ -106,7 +106,20 @@ public class EmojiFontRenderer extends Font {
 
     @Override
     public int width(FormattedText textProperties) {
-        return this.width(textProperties.getString());
+        String text = textProperties.getString();
+        HashMap<Integer, Emoji> emojis;
+        try {
+            emojis = RECENT_STRINGS.get(text).getRight();
+            if (emojis.isEmpty()) {
+                return super.width(textProperties);
+            }
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+            return super.width(textProperties);
+        }
+        EmojiWidthProvider widthProvider = new EmojiWidthProvider(emojis);
+        StringDecomposer.iterateFormatted(textProperties, Style.EMPTY, widthProvider);
+        return widthProvider.getWidth();
     }
 
     @Override
@@ -116,7 +129,20 @@ public class EmojiFontRenderer extends Font {
             builder.append((char) ch);
             return true;
         });
-        return width(builder.toString());
+        String text = builder.toString();
+        HashMap<Integer, Emoji> emojis;
+        try {
+            emojis = RECENT_STRINGS.get(text).getRight();
+            if (emojis.isEmpty()) {
+                return super.width(processor);
+            }
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+            return super.width(processor);
+        }
+        EmojiWidthProvider widthProvider = new EmojiWidthProvider(emojis);
+        processor.accept(widthProvider);
+        return widthProvider.getWidth();
     }
 
     @Override
@@ -135,6 +161,9 @@ public class EmojiFontRenderer extends Font {
             emojis = cache.getRight();
         } catch (ExecutionException e) {
             e.printStackTrace();
+        }
+        if (emojis.isEmpty()) {
+            return super.renderText(text, x, y, color, isShadow, matrix, buffer, displayMode, colorBackgroundIn, packedLight);
         }
         EmojiCharacterRenderer fontrenderer$characterrenderer = new EmojiCharacterRenderer(emojis, buffer, x, y, color, isShadow, matrix, displayMode == DisplayMode.SEE_THROUGH, packedLight);
         StringDecomposer.iterateFormatted(text, Style.EMPTY, fontrenderer$characterrenderer);
@@ -161,6 +190,9 @@ public class EmojiFontRenderer extends Font {
                     emojis = cache.getRight();
                 } catch (ExecutionException e) {
                     e.printStackTrace();
+                }
+                if (emojis.isEmpty()) {
+                    return super.drawInBatch(reorderingProcessor, x, y, color, isShadow, matrix, buffer, displayMode, colorBackgroundIn, packedLight);
                 }
                 List<FormattedCharSequence> processors = new ArrayList<>();
                 HashMap<Integer, Emoji> finalEmojis = emojis;
@@ -213,6 +245,43 @@ public class EmojiFontRenderer extends Font {
         @Override
         public boolean accept(FormattedCharSink iCharacterConsumer) {
             return iCharacterConsumer.accept(pos, style, character);
+        }
+    }
+
+    class EmojiWidthProvider implements FormattedCharSink {
+
+        private final HashMap<Integer, Emoji> emojis;
+        private int cleanPos;
+        private boolean ignoringEmoji;
+        private float width;
+
+        EmojiWidthProvider(HashMap<Integer, Emoji> emojis) {
+            this.emojis = emojis;
+        }
+
+        @Override
+        public boolean accept(int pos, Style style, int charInt) {
+            if (!ignoringEmoji) {
+                if (emojis.get(cleanPos) == null) {
+                    FontSet font = EmojiFontRenderer.this.getFontSet(style.getFont());
+                    GlyphInfo glyph = font.getGlyphInfo(charInt, EmojiFontRenderer.this.filterFishyGlyphs);
+                    width += glyph.getAdvance(style.isBold());
+                    cleanPos++;
+                } else {
+                    width += 10.0F;
+                    ignoringEmoji = true;
+                    return true;
+                }
+            }
+            if (ignoringEmoji && charInt == ':') {
+                ignoringEmoji = false;
+                cleanPos++;
+            }
+            return true;
+        }
+
+        int getWidth() {
+            return (int) Math.ceil(width);
         }
     }
 
