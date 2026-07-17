@@ -96,7 +96,7 @@ dependencies {
 
 shadowJar {
     configurations = [project.configurations.shade]
-    classifier = ""
+    archiveClassifier.set("")
     relocate 'com.esoteric.yamlbeans', 'com.hrznstudio.emojiful.shaded.yamlbeans'
     finalizedBy 'reobfShadowJar'
 }
