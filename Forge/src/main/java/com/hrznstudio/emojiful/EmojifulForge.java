@@ -27,10 +27,12 @@ public class EmojifulForge {
     public static final RegistryObject<RecipeType<EmojiRecipe>> EMOJI_RECIPE_TYPE = RECIPE_TYPE.register("emoji_recipe_type", () -> RecipeType.simple(new ResourceLocation(Constants.MOD_ID, "emoji_recipe_type")));
 
     public EmojifulForge() {
+        ForgeEmojiNetwork.register();
         RECIPE_SER.register(FMLJavaModLoadingContext.get().getModEventBus());
         RECIPE_TYPE.register(FMLJavaModLoadingContext.get().getModEventBus());
         ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, ForgeConfigHelper.setup(new ForgeConfigSpec.Builder()));
         FMLJavaModLoadingContext.get().getModEventBus().addListener(this::handleClientSetup);
+        MinecraftForge.EVENT_BUS.addListener(ForgeEmojiNetwork::onDatapackSync);
     }
 
     private void handleClientSetup(final FMLClientSetupEvent event) {

@@ -175,6 +175,9 @@ public class EmojiSelectionGui extends IDrawableGuiListener {
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
+        if (!showingSelectionArea) {
+            return false;
+        }
         if (categorySelectionArea.contains((int) mouseX, (int) mouseY)) {
             categoryPointer -= delta;
             categoryPointer = Mth.clamp(categoryPointer, 0, ClientEmojiHandler.CATEGORIES.size() - 7);
@@ -205,6 +208,9 @@ public class EmojiSelectionGui extends IDrawableGuiListener {
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (!showingSelectionArea || !fieldWidget.isFocused()) {
+            return false;
+        }
         if (fieldWidget.keyPressed(keyCode, scanCode, modifiers)) {
             updateFilter();
             return true;
@@ -214,6 +220,9 @@ public class EmojiSelectionGui extends IDrawableGuiListener {
 
     @Override
     public boolean charTyped(char c, int mod) {
+        if (!showingSelectionArea || !fieldWidget.isFocused()) {
+            return false;
+        }
         if (fieldWidget.charTyped(c, mod)) {
             updateFilter();
             return true;

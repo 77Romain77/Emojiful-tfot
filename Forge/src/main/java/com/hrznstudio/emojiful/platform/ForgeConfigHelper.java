@@ -9,8 +9,6 @@ public class ForgeConfigHelper implements IConfigHelper {
     public static ForgeConfigSpec.BooleanValue renderEmoji;
     public static ForgeConfigSpec.BooleanValue showEmojiSelector;
     public static ForgeConfigSpec.BooleanValue showEmojiAutocomplete;
-    public static ForgeConfigSpec.BooleanValue loadTwemoji;
-    public static ForgeConfigSpec.BooleanValue loadCustom;
     public static ForgeConfigSpec.BooleanValue loadDatapack;
     public static ForgeConfigSpec.BooleanValue loadGifEmojis;
 
@@ -28,8 +26,6 @@ public class ForgeConfigHelper implements IConfigHelper {
         loadGifEmojis = builder.comment("Load animated emojis, if disabled they will be a still image").translation("emojiful.midnightconfig.loadGifEmojis").define("gifs", true);
         shortEmojiReplacement = builder.comment("Replace short versions of emoji like :) into :smile: so they can be rendered as emoji").translation("emojiful.midnightconfig.shortEmojiReplacement").define("short_emoji_replacement", true);
         builder.push("EmojiTypes").translation("emojiful.midnightconfig.emojiTypes");
-        loadTwemoji = builder.comment("Loads Twemojis used in sites like Twitter and Discord").translation("emojiful.midnightconfig.loadTwemoji").define("twemoji", true);
-        loadCustom = builder.comment("Loads custom emojis provided by Emojiful").translation("emojiful.midnightconfig.enableLoadCustom").define("custom", true);
         loadDatapack = builder.comment("Loads datapack emojis provided by the server you join").translation("emojiful.midnightconfig.enableLoadDatapack").define("datapack", true);
         builder.pop();
         builder.pop();
@@ -73,16 +69,6 @@ public class ForgeConfigHelper implements IConfigHelper {
     @Override
     public boolean shortEmojiReplacement() {
         return shortEmojiReplacement.get();
-    }
-
-    @Override
-    public boolean loadTwemoji() {
-        return loadTwemoji.get();
-    }
-
-    @Override
-    public boolean loadCustom() {
-        return loadCustom.get();
     }
 
     @Override

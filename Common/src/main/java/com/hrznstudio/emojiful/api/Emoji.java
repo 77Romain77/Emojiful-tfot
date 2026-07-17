@@ -11,15 +11,12 @@ import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.client.renderer.texture.SimpleTexture;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManager;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.Nullable;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.*;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -161,13 +158,15 @@ public class Emoji implements Predicate<String> {
                     e.printStackTrace();
                 }
             }
-        } else if (this.imageThread == null) {
-            loadTextureFromServer();
+        } else {
+            this.frames = new ArrayList<>();
+            this.frames.add(error_texture);
+            this.finishedLoading = true;
         }
     }
 
     public String getUrl() {
-        return "https://raw.githubusercontent.com/InnovativeOnlineIndustries/emojiful-assets/master/" + location;
+        return location;
     }
 
     public File getCache() {
@@ -189,46 +188,6 @@ public class Emoji implements Predicate<String> {
             }
             Emoji.this.finishedLoading = true;
         });
-    }
-
-    protected void loadTextureFromServer() {
-        this.imageThread = new Thread("Emojiful Texture Downloader #" + threadDownloadCounter.incrementAndGet()) {
-            @Override
-            public void run() {
-                HttpURLConnection httpurlconnection = null;
-                try {
-                    httpurlconnection = (HttpURLConnection) (new URL(getUrl()).openConnection(Minecraft.getInstance().getProxy()));
-                    httpurlconnection.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.95 Safari/537.11");
-                    httpurlconnection.setDoInput(true);
-                    httpurlconnection.setDoOutput(false);
-                    httpurlconnection.connect();
-                    if (httpurlconnection.getResponseCode() / 100 == 2) {
-                        if (getCache() != null) {
-                            FileUtils.copyInputStreamToFile(httpurlconnection.getInputStream(), getCache());
-                        }
-                        Emoji.this.finishedLoading = true;
-                        loadImage();
-                    } else {
-                        Emoji.this.frames = new ArrayList<>();
-                        Emoji.this.frames.add(noSignal_texture);
-                        Emoji.this.deleteOldTexture = true;
-                        Emoji.this.finishedLoading = true;
-                    }
-                } catch (Exception exception) {
-                    exception.printStackTrace();
-                    Emoji.this.frames = new ArrayList<>();
-                    Emoji.this.frames.add(error_texture);
-                    Emoji.this.deleteOldTexture = true;
-                    Emoji.this.finishedLoading = true;
-                } finally {
-                    if (httpurlconnection != null) {
-                        httpurlconnection.disconnect();
-                    }
-                }
-            }
-        };
-        this.imageThread.setDaemon(true);
-        this.imageThread.start();
     }
 
     public class DownloadImageData extends SimpleTexture {

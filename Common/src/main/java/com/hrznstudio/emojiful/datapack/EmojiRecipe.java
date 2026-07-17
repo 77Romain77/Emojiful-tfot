@@ -10,18 +10,27 @@ import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.level.Level;
 
+import java.util.List;
+
 public class EmojiRecipe implements Recipe<Container> {
 
     private final ResourceLocation recipeName;
     private final String category;
     private final String name;
-    private final String url;
+    private final ResourceLocation texture;
+    private final List<String> strings;
+    private final List<String> texts;
+    private final int sort;
 
-    public EmojiRecipe(ResourceLocation recipeName, String category, String name, String url) {
+    public EmojiRecipe(ResourceLocation recipeName, String category, String name, ResourceLocation texture,
+                       List<String> strings, List<String> texts, int sort) {
         this.recipeName = recipeName;
         this.category = category;
         this.name = name;
-        this.url = url;
+        this.texture = texture;
+        this.strings = List.copyOf(strings);
+        this.texts = List.copyOf(texts);
+        this.sort = sort;
     }
 
     @Override
@@ -71,7 +80,19 @@ public class EmojiRecipe implements Recipe<Container> {
         return name;
     }
 
-    public String getUrl() {
-        return url;
+    public ResourceLocation getTexture() {
+        return texture;
+    }
+
+    public List<String> getStrings() {
+        return strings;
+    }
+
+    public List<String> getTexts() {
+        return texts;
+    }
+
+    public int getSort() {
+        return sort;
     }
 }
