@@ -1,15 +1,9 @@
 plugins {
     id 'java'
-    id 'org.spongepowered.gradle.vanilla' version '0.2.1-20231203.020957-71'
     id 'maven-publish'
 }
 
 archivesBaseName = "${build_file_name}-Common-${minecraft_version}"
-
-minecraft {
-    version(minecraft_version)
-    accessWideners(project(":Common").file("src/main/resources/emojifulcommon.accesswidener"))
-}
 
 dependencies {
     compileOnly("org.spongepowered:mixin:0.8.5")
