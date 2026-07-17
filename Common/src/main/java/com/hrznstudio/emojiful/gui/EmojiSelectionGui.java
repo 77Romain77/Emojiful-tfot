@@ -208,6 +208,9 @@ public class EmojiSelectionGui extends IDrawableGuiListener {
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (!showingSelectionArea || !fieldWidget.isFocused()) {
+            return false;
+        }
         if (fieldWidget.keyPressed(keyCode, scanCode, modifiers)) {
             updateFilter();
             return true;
@@ -217,6 +220,9 @@ public class EmojiSelectionGui extends IDrawableGuiListener {
 
     @Override
     public boolean charTyped(char c, int mod) {
+        if (!showingSelectionArea || !fieldWidget.isFocused()) {
+            return false;
+        }
         if (fieldWidget.charTyped(c, mod)) {
             updateFilter();
             return true;

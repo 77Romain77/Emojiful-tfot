@@ -37,16 +37,6 @@ public class FabricConfigHelper extends MidnightConfig implements IConfigHelper 
     public static Comment emojiTypes;
 
     @Comment
-    public static Comment loadTwemoji;
-    @Entry
-    public static boolean enableLoadTwemoji = true;
-
-    @Comment
-    public static Comment enableLoadCustom;
-    @Entry
-    public static boolean loadCustom = true;
-
-    @Comment
     public static Comment enableLoadDatapack;
     @Entry
     public static boolean loadDatapack = true;
@@ -83,16 +73,6 @@ public class FabricConfigHelper extends MidnightConfig implements IConfigHelper 
     }
 
     @Override
-    public boolean loadTwemoji() {
-        return enableLoadTwemoji;
-    }
-
-    @Override
-    public boolean loadCustom() {
-        return loadCustom;
-    }
-
-    @Override
     public boolean loadDatapack() {
         return loadDatapack;
     }
@@ -112,4 +92,3 @@ public class FabricConfigHelper extends MidnightConfig implements IConfigHelper 
         return emojiSelector;
     }
 }
-
