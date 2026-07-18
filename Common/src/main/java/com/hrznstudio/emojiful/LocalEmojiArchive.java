@@ -2,9 +2,11 @@ package com.hrznstudio.emojiful;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
 
 /** Keeps the local emoji ZIP open so lazy image loading does not re-index it for every texture. */
@@ -16,7 +18,12 @@ public final class LocalEmojiArchive {
 
     public static synchronized ZipFile open(Path path) throws IOException {
         if (archive != null) archive.close();
-        archive = new ZipFile(path.toFile(), StandardCharsets.UTF_8);
+        try {
+            archive = new ZipFile(path.toFile(), StandardCharsets.UTF_8);
+        } catch (ZipException utf8Exception) {
+            Constants.LOG.warn("Emoji archive {} does not use UTF-8 filenames; retrying with CP437", path);
+            archive = new ZipFile(path.toFile(), Charset.forName("CP437"));
+        }
         return archive;
     }
 
