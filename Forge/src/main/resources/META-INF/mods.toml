@@ -8,6 +8,7 @@ license="MIT"
     modId="emojiful"
     version="${file.jarVersion}"
     displayName="Emojiful"
+    displayTest="IGNORE_SERVER_VERSION"
     authors="HRZN"
     description='''
     Adds Emojis to the Game Chat!!!

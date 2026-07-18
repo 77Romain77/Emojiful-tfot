@@ -9,7 +9,6 @@ public class ForgeConfigHelper implements IConfigHelper {
     public static ForgeConfigSpec.BooleanValue renderEmoji;
     public static ForgeConfigSpec.BooleanValue showEmojiSelector;
     public static ForgeConfigSpec.BooleanValue showEmojiAutocomplete;
-    public static ForgeConfigSpec.BooleanValue loadDatapack;
     public static ForgeConfigSpec.BooleanValue loadGifEmojis;
 
     public static ForgeConfigSpec.BooleanValue shortEmojiReplacement;
@@ -25,9 +24,6 @@ public class ForgeConfigHelper implements IConfigHelper {
         showEmojiAutocomplete = builder.comment("Enable Emoji autocomplete in the chat text line").translation("emojiful.midnightconfig.emojiAutocomplete").define("emoji_autocomplete", true);
         loadGifEmojis = builder.comment("Load animated emojis, if disabled they will be a still image").translation("emojiful.midnightconfig.loadGifEmojis").define("gifs", true);
         shortEmojiReplacement = builder.comment("Replace short versions of emoji like :) into :smile: so they can be rendered as emoji").translation("emojiful.midnightconfig.shortEmojiReplacement").define("short_emoji_replacement", true);
-        builder.push("EmojiTypes").translation("emojiful.midnightconfig.emojiTypes");
-        loadDatapack = builder.comment("Loads datapack emojis provided by the server you join").translation("emojiful.midnightconfig.enableLoadDatapack").define("datapack", true);
-        builder.pop();
         builder.pop();
         builder.push("ProfanityFilter").translation("emojiful.midnightconfig.profanityFilter");
         profanityFilter = builder.comment("Enable Profanity Filter, this will replace bad words with emoji").translation("emojiful.midnightconfig.enableProfanityFilter").define("enabled", false);
@@ -71,8 +67,4 @@ public class ForgeConfigHelper implements IConfigHelper {
         return shortEmojiReplacement.get();
     }
 
-    @Override
-    public boolean loadDatapack() {
-        return loadDatapack.get();
-    }
 }

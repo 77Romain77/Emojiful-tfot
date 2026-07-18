@@ -57,7 +57,7 @@ public class ClientEmojiHandler {
     }
 
     private static void preInitEmojis() {
-        CATEGORIES.addAll(Arrays.asList("Smileys & Emotion", "Animals & Nature", "Food & Drink", "Activities", "Travel & Places", "Objects", "Symbols", "Flags").stream().map(s -> new EmojiCategory(s, false)).collect(Collectors.toList()));
+        LocalEmojiLoader.load();
         if (com.hrznstudio.emojiful.platform.Services.CONFIG.getProfanityFilter()) ProfanityFilter.loadConfigs();
     }
 

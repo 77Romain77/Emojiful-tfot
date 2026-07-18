@@ -16,5 +16,4 @@ public interface IConfigHelper {
 
     boolean shortEmojiReplacement();
 
-    boolean loadDatapack();
 }

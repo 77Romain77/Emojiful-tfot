@@ -37,11 +37,6 @@ public class FabricConfigHelper extends MidnightConfig implements IConfigHelper 
     public static Comment emojiTypes;
 
     @Comment
-    public static Comment enableLoadDatapack;
-    @Entry
-    public static boolean loadDatapack = true;
-
-    @Comment
     public static Comment enableProfanityFilter;
     @Entry
     public static boolean profanityFilter = false;
@@ -70,11 +65,6 @@ public class FabricConfigHelper extends MidnightConfig implements IConfigHelper 
     @Override
     public boolean shortEmojiReplacement() {
         return emojiReplacement;
-    }
-
-    @Override
-    public boolean loadDatapack() {
-        return loadDatapack;
     }
 
     @Override
