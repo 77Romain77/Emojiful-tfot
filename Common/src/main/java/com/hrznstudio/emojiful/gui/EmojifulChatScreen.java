@@ -2,7 +2,6 @@ package com.hrznstudio.emojiful.gui;
 
 import com.hrznstudio.emojiful.CommonClass;
 import com.hrznstudio.emojiful.Constants;
-import com.hrznstudio.emojiful.mixin.EmojiFontEditBox;
 import com.hrznstudio.emojiful.platform.Services;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;

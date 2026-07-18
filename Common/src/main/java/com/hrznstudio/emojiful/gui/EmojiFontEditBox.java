@@ -1,4 +1,4 @@
-package com.hrznstudio.emojiful.mixin;
+package com.hrznstudio.emojiful.gui;
 
 import net.minecraft.client.gui.Font;
 
