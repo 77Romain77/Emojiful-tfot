@@ -2,11 +2,11 @@ package com.hrznstudio.emojiful.gui;
 
 import com.hrznstudio.emojiful.CommonClass;
 import com.hrznstudio.emojiful.Constants;
+import com.hrznstudio.emojiful.mixin.EmojiFontEditBox;
 import com.hrznstudio.emojiful.platform.Services;
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.ChatScreen;
-import org.lwjgl.glfw.GLFW;
 
 public class EmojifulChatScreen extends ChatScreen {
 
@@ -20,6 +20,7 @@ public class EmojifulChatScreen extends ChatScreen {
     @Override
     protected void init() {
         super.init();
+        ((EmojiFontEditBox) this.input).emojiful$setFont(Minecraft.getInstance().font);
         if (!Constants.error) {
             if (Services.CONFIG.showEmojiAutocomplete()) emojiSuggestionHelper = new EmojiSuggestionHelper(this);
             if (Services.CONFIG.showEmojiSelector()) emojiSelectionGui = new EmojiSelectionGui(this);
