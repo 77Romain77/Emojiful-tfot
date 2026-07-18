@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build the client-side local emoji folder from Emojiful's former URL sources."""
+"""Build emojiful/emojis.zip from Emojiful's former URL sources."""
 
 import argparse
 import json
@@ -12,6 +12,36 @@ from pathlib import Path
 import yaml
 
 
+CATEGORY_NAMES = {
+    "Activities": "Activités",
+    "Animals & Nature": "Animaux & Nature",
+    "Component": "Composants",
+    "Flags": "Drapeaux",
+    "Food & Drink": "Nourriture & Boissons",
+    "Objects": "Objets",
+    "People & Body": "Personnes & Corps",
+    "Smileys & Emotion": "Émotions",
+    "Symbols": "Symboles",
+    "Travel & Places": "Voyages & Lieux",
+}
+
+DEFAULT_CATEGORY_ORDER = [
+    "Émotions",
+    "Personnes & Corps",
+    "Animaux & Nature",
+    "Nourriture & Boissons",
+    "Activités",
+    "Voyages & Lieux",
+    "Objets",
+    "Symboles",
+    "Drapeaux",
+    "Composants",
+    "Discord",
+    "Blobs",
+    "Pepe",
+]
+
+
 def safe_filename(value: str) -> str:
     value = value.lower().replace(" ", "_")
     value = re.sub(r"[^a-z0-9._+\-]", "_", value)
@@ -19,11 +49,12 @@ def safe_filename(value: str) -> str:
 
 
 def safe_category(value: str) -> str:
+    value = CATEGORY_NAMES.get(value, value)
     return re.sub(r'[<>:"/\\|?*]', "_", value).strip() or "Autres"
 
 
 def write_emoji(root: Path, category: str, filename: str, source: Path, metadata: dict) -> None:
-    folder = root / "emojiful" / "emojis" / safe_category(category)
+    folder = root / safe_category(category)
     folder.mkdir(parents=True, exist_ok=True)
     image = folder / filename
     shutil.copyfile(source, image)
@@ -43,7 +74,7 @@ def add_twemoji(root: Path, emoji_data: Path) -> int:
         if not source.is_file():
             raise FileNotFoundError(f"Missing Twemoji image: {source}")
 
-        category = entry["category"]
+        category = safe_category(entry["category"])
         names = used_names.setdefault(category, set())
         stem = safe_filename(entry["short_name"])
         candidate = stem
@@ -87,26 +118,50 @@ def add_custom_emojis(root: Path, assets: Path) -> int:
     return count
 
 
+def category_order(root: Path) -> list[str]:
+    available = {path.name for path in root.iterdir() if path.is_dir()}
+    ordered = [name for name in DEFAULT_CATEGORY_ORDER if name in available]
+    ordered.extend(sorted(available.difference(ordered)))
+    return ordered
+
+
+def write_zip(source: Path, output: Path, compression: int = zipfile.ZIP_DEFLATED) -> None:
+    with zipfile.ZipFile(output, "w", compression=compression, compresslevel=9 if compression else None) as archive:
+        for path in sorted(source.rglob("*")):
+            if path.is_file():
+                archive.write(path, path.relative_to(source).as_posix())
+
+
 def build(output: Path, emoji_data: Path, custom_assets: Path) -> None:
     with tempfile.TemporaryDirectory(prefix="emojiful-local-") as temporary:
-        root = Path(temporary)
-        twemoji_count = add_twemoji(root, emoji_data)
-        custom_count = add_custom_emojis(root, custom_assets)
-        readme = root / "emojiful" / "README.txt"
-        readme.parent.mkdir(parents=True, exist_ok=True)
-        readme.write_text(
+        temporary_root = Path(temporary)
+        emoji_contents = temporary_root / "emoji-contents"
+        emoji_contents.mkdir()
+        twemoji_count = add_twemoji(emoji_contents, emoji_data)
+        custom_count = add_custom_emojis(emoji_contents, custom_assets)
+
+        order_data = {"order": category_order(emoji_contents)}
+        (emoji_contents / "categories.json").write_text(
+            json.dumps(order_data, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
+
+        distribution = temporary_root / "distribution" / "emojiful"
+        distribution.mkdir(parents=True)
+        write_zip(emoji_contents, distribution / "emojis.zip")
+        (distribution / "categories.json").write_text(
+            json.dumps(order_data, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
+        (distribution / "README.txt").write_text(
             "TFOT Emojiful local emoji pack for Minecraft Forge 1.20.1\n"
             f"Contains {twemoji_count} Twemoji and {custom_count} custom emojis.\n"
             "Extract the emojiful folder into the Minecraft game directory.\n"
-            "The mod and this folder are only required on the client.\n",
+            "Edit emojiful/categories.json to change the category display order.\n"
+            "The mod and these files are only required on the client.\n",
             encoding="utf-8",
         )
 
         output.parent.mkdir(parents=True, exist_ok=True)
-        with zipfile.ZipFile(output, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
-            for path in sorted(root.rglob("*")):
-                if path.is_file():
-                    archive.write(path, path.relative_to(root).as_posix())
+        write_zip(temporary_root / "distribution", output, zipfile.ZIP_STORED)
     print(f"Created {output} ({twemoji_count + custom_count} emojis)")
 
 

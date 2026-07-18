@@ -28,6 +28,10 @@ jobs:
           repository: iamcal/emoji-data
           ref: 097705020bcf82331c9ef10df3425aad15f5043c
           path: _emoji_sources/emoji-data
+          sparse-checkout: |
+            emoji.json
+            img-twitter-64
+          sparse-checkout-cone-mode: false
 
       - name: Checkout Emojiful custom assets
         uses: actions/checkout@v4

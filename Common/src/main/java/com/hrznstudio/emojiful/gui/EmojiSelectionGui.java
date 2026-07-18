@@ -33,7 +33,7 @@ public class EmojiSelectionGui extends IDrawableGuiListener {
     private final Rect2i textFieldRectangle;
     private int selectionPointer;
     private int categoryPointer;
-    private int openSelectionAreaEmoji;
+    private final Emoji openSelectionAreaEmoji;
     private boolean showingSelectionArea;
     private double lastMouseX;
     private double lastMouseY;
@@ -44,9 +44,10 @@ public class EmojiSelectionGui extends IDrawableGuiListener {
         this.selectionPointer = 1;
         this.categoryPointer = 0;
         this.chatScreen = screen;
-        this.openSelectionAreaEmoji = -1;
-        if (Constants.EMOJI_MAP.containsKey("Smileys & Emotion"))
-            this.openSelectionAreaEmoji = new Random().nextInt(Constants.EMOJI_MAP.get("Smileys & Emotion").size());
+        this.openSelectionAreaEmoji = Constants.EMOJI_LIST.stream()
+                .filter(emoji -> emoji.name.equalsIgnoreCase("grinning") || emoji.name.equalsIgnoreCase("smiley"))
+                .findFirst()
+                .orElse(Constants.EMOJI_LIST.isEmpty() ? null : Constants.EMOJI_LIST.get(0));
         this.showingSelectionArea = false;
         int offset = 0;
         if (Services.PLATFORM.isModLoaded("quark")) offset = -80;
@@ -63,8 +64,11 @@ public class EmojiSelectionGui extends IDrawableGuiListener {
 
     @Override
     public void render(GuiGraphics guiGraphics) {
-        if (this.openSelectionAreaEmoji != -1)
-            guiGraphics.drawString(Minecraft.getInstance().font, Constants.EMOJI_MAP.get("Smileys & Emotion").get(openSelectionAreaEmoji).strings.get(0), openSelectionArea.getX(), openSelectionArea.getY(), 0);
+        if (this.openSelectionAreaEmoji != null) {
+            guiGraphics.drawString(Minecraft.getInstance().font, openSelectionAreaEmoji.strings.get(0), openSelectionArea.getX(), openSelectionArea.getY(), 0);
+        } else {
+            guiGraphics.drawString(ClientEmojiHandler.oldFontRenderer, "☺", openSelectionArea.getX() + 2, openSelectionArea.getY() + 1, 0xffffff);
+        }
         if (this.showingSelectionArea) {
             drawRectangle(guiGraphics, this.selectionArea);
             drawRectangle(guiGraphics, this.categorySelectionArea);

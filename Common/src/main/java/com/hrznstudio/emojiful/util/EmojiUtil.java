@@ -20,9 +20,8 @@ import javax.imageio.ImageReader;
 import javax.imageio.metadata.IIOMetadata;
 import javax.imageio.metadata.IIOMetadataNode;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -72,10 +71,10 @@ public class EmojiUtil extends RenderType {
         return string.replaceAll("\\)", "\\\\)").replaceAll("\\(", "\\\\(").replaceAll("\\|", "\\\\|").replaceAll("\\*", "\\\\*");
     }
 
-    public static List<Pair<BufferedImage, Integer>> splitGif(File file) throws IOException {
+    public static List<Pair<BufferedImage, Integer>> splitGif(InputStream input) throws IOException {
         List<Pair<BufferedImage, Integer>> images = new ArrayList<>();
         ImageReader reader = ImageIO.getImageReadersBySuffix("gif").next();
-        reader.setInput(ImageIO.createImageInputStream(new FileInputStream(file)), false);
+        reader.setInput(ImageIO.createImageInputStream(input), false);
         IIOMetadata metadata = reader.getImageMetadata(0);
         String metaFormatName = metadata.getNativeMetadataFormatName();
         for (int i = 0; i < reader.getNumImages(true); i++) {
