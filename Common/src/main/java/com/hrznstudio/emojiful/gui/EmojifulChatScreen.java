@@ -70,6 +70,22 @@ public class EmojifulChatScreen extends ChatScreen {
     }
 
     @Override
+    public boolean mouseDragged(double x, double y, int button, double dragX, double dragY) {
+        if (emojiSelectionGui != null && emojiSelectionGui.mouseDragged(x, y, button, dragX, dragY)) {
+            return true;
+        }
+        return super.mouseDragged(x, y, button, dragX, dragY);
+    }
+
+    @Override
+    public boolean mouseReleased(double x, double y, int button) {
+        if (emojiSelectionGui != null && emojiSelectionGui.mouseReleased(x, y, button)) {
+            return true;
+        }
+        return super.mouseReleased(x, y, button);
+    }
+
+    @Override
     public boolean charTyped(char c, int i) {
         if (emojiSelectionGui != null && emojiSelectionGui.charTyped(c, i)) {
             return true;
