@@ -33,8 +33,10 @@ public class EmojiSelectionGui extends IDrawableGuiListener {
     private final Rect2i textFieldRectangle;
     private int selectionPointer;
     private int categoryPointer;
-    private int openSelectionAreaEmoji;
+    private final Emoji openSelectionAreaEmoji;
     private boolean showingSelectionArea;
+    private boolean draggingEmojiScrollbar;
+    private boolean draggingCategoryScrollbar;
     private double lastMouseX;
     private double lastMouseY;
     private Emoji lastEmoji;
@@ -44,9 +46,10 @@ public class EmojiSelectionGui extends IDrawableGuiListener {
         this.selectionPointer = 1;
         this.categoryPointer = 0;
         this.chatScreen = screen;
-        this.openSelectionAreaEmoji = -1;
-        if (Constants.EMOJI_MAP.containsKey("Smileys & Emotion"))
-            this.openSelectionAreaEmoji = new Random().nextInt(Constants.EMOJI_MAP.get("Smileys & Emotion").size());
+        this.openSelectionAreaEmoji = Constants.EMOJI_LIST.stream()
+                .filter(emoji -> emoji.name.equalsIgnoreCase("grinning") || emoji.name.equalsIgnoreCase("smiley"))
+                .findFirst()
+                .orElse(Constants.EMOJI_LIST.isEmpty() ? null : Constants.EMOJI_LIST.get(0));
         this.showingSelectionArea = false;
         int offset = 0;
         if (Services.PLATFORM.isModLoaded("quark")) offset = -80;
@@ -63,8 +66,11 @@ public class EmojiSelectionGui extends IDrawableGuiListener {
 
     @Override
     public void render(GuiGraphics guiGraphics) {
-        if (this.openSelectionAreaEmoji != -1)
-            guiGraphics.drawString(Minecraft.getInstance().font, Constants.EMOJI_MAP.get("Smileys & Emotion").get(openSelectionAreaEmoji).strings.get(0), openSelectionArea.getX(), openSelectionArea.getY(), 0);
+        if (this.openSelectionAreaEmoji != null) {
+            guiGraphics.drawString(Minecraft.getInstance().font, openSelectionAreaEmoji.strings.get(0), openSelectionArea.getX(), openSelectionArea.getY(), 0);
+        } else {
+            guiGraphics.drawString(ClientEmojiHandler.oldFontRenderer, "☺", openSelectionArea.getX() + 2, openSelectionArea.getY() + 1, 0xffffff);
+        }
         if (this.showingSelectionArea) {
             drawRectangle(guiGraphics, this.selectionArea);
             drawRectangle(guiGraphics, this.categorySelectionArea);
@@ -72,8 +78,7 @@ public class EmojiSelectionGui extends IDrawableGuiListener {
             for (int i = 0; i < 6; i++) {
                 drawLine(guiGraphics, i * 12f, i + selectionPointer);
             }
-            int progressY = (int) (((this.emojiInfoArea.getY() - this.categorySelectionArea.getY() - 5) / ((double) getLineAmount())) * (selectionPointer));
-            drawRectangle(guiGraphics, new Rect2i(this.selectionArea.getX() + this.selectionArea.getWidth() - 2, this.categorySelectionArea.getY() + progressY, 1, 5), 0xff525252);
+            drawRectangle(guiGraphics, new Rect2i(this.selectionArea.getX() + this.selectionArea.getWidth() - 2, getEmojiScrollbarY(), 1, 5), 0xff525252);
             if (lastEmoji != null) {
                 guiGraphics.drawString(Minecraft.getInstance().font, lastEmoji.strings.get(0), emojiInfoArea.getX() + 2, emojiInfoArea.getY() + 6, 0);
                 StringBuilder builder = new StringBuilder();
@@ -95,12 +100,13 @@ public class EmojiSelectionGui extends IDrawableGuiListener {
                 guiGraphics.pose().scale(1, 1, 1);
                 guiGraphics.pose().popPose();
             }
-            progressY = (int) (((this.categorySelectionArea.getHeight() - 10) / ((double) ClientEmojiHandler.CATEGORIES.size() - 7)) * (categoryPointer));
-            drawRectangle(guiGraphics, new Rect2i(this.categorySelectionArea.getX() + this.categorySelectionArea.getWidth() - 2, this.categorySelectionArea.getY() + progressY + 2, 1, 5), 0xff525252);
+            int categoryScrollMax = getCategoryScrollMax();
+            categoryPointer = Mth.clamp(categoryPointer, 0, categoryScrollMax);
+            drawRectangle(guiGraphics, new Rect2i(this.categorySelectionArea.getX() + this.categorySelectionArea.getWidth() - 2, getCategoryScrollbarY(), 1, 5), 0xff525252);
             EmojiCategory firstCategory = getCategory(selectionPointer);
             for (int i = 0; i < 7; i++) {
                 int selCategory = i + categoryPointer;
-                if (selCategory < ClientEmojiHandler.CATEGORIES.size()) {
+                if (selCategory >= 0 && selCategory < ClientEmojiHandler.CATEGORIES.size()) {
                     EmojiCategory category = ClientEmojiHandler.CATEGORIES.get(selCategory);
                     Rect2i rec = new Rect2i(categorySelectionArea.getX() + 6, categorySelectionArea.getY() + 6 + i * 12, 11, 11);
                     if (category.equals(firstCategory)) {
@@ -119,18 +125,28 @@ public class EmojiSelectionGui extends IDrawableGuiListener {
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int p_231044_5_) {
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (openSelectionArea.contains((int) mouseX, (int) mouseY)) {
             toggleSelectionArea();
             return true;
         }
 
         if (this.showingSelectionArea) {
+            if (button == 0 && getEmojiScrollbarTrack().contains((int) mouseX, (int) mouseY)) {
+                draggingEmojiScrollbar = true;
+                setEmojiScrollFromMouse(mouseY);
+                return true;
+            }
+            if (button == 0 && getCategoryScrollbarTrack().contains((int) mouseX, (int) mouseY)) {
+                draggingCategoryScrollbar = true;
+                setCategoryScrollFromMouse(mouseY);
+                return true;
+            }
             fieldWidget.setFocused(textFieldRectangle.contains((int) mouseX, (int) mouseY));
             if (categorySelectionArea.contains((int) mouseX, (int) mouseY)) {
                 for (int i = 0; i < 7; i++) {
                     int selCategory = i + categoryPointer;
-                    if (selCategory < ClientEmojiHandler.CATEGORIES.size()) {
+                    if (selCategory >= 0 && selCategory < ClientEmojiHandler.CATEGORIES.size()) {
                         Rect2i rec = new Rect2i(categorySelectionArea.getX() + 6, categorySelectionArea.getY() + 6 + i * 12, 11, 11);
                         if (rec.contains((int) mouseX, (int) mouseY)) {
                             EmojiCategory name = ClientEmojiHandler.CATEGORIES.get(selCategory);
@@ -168,6 +184,28 @@ public class EmojiSelectionGui extends IDrawableGuiListener {
     }
 
     @Override
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+        if (button != 0) return false;
+        if (draggingEmojiScrollbar) {
+            setEmojiScrollFromMouse(mouseY);
+            return true;
+        }
+        if (draggingCategoryScrollbar) {
+            setCategoryScrollFromMouse(mouseY);
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        if (button != 0 || (!draggingEmojiScrollbar && !draggingCategoryScrollbar)) return false;
+        draggingEmojiScrollbar = false;
+        draggingCategoryScrollbar = false;
+        return true;
+    }
+
+    @Override
     public void mouseMoved(double mouseX, double mouseY) {
         this.lastMouseX = mouseX;
         this.lastMouseY = mouseY;
@@ -180,13 +218,13 @@ public class EmojiSelectionGui extends IDrawableGuiListener {
         }
         if (categorySelectionArea.contains((int) mouseX, (int) mouseY)) {
             categoryPointer -= delta;
-            categoryPointer = Mth.clamp(categoryPointer, 0, ClientEmojiHandler.CATEGORIES.size() - 7);
+            categoryPointer = Mth.clamp(categoryPointer, 0, getCategoryScrollMax());
             return true;
         }
         if (selectionArea.contains((int) mouseX, (int) mouseY)) {
             selectionPointer -= delta;
             selectionPointer = Mth.clamp(selectionPointer, 1, Math.max(1, getLineAmount() - 5));
-            categoryPointer = Mth.clamp(Arrays.asList(ClientEmojiHandler.CATEGORIES).indexOf(getCategory(selectionPointer)), 0, ClientEmojiHandler.CATEGORIES.size() - 7);
+            categoryPointer = Mth.clamp(ClientEmojiHandler.CATEGORIES.indexOf(getCategory(selectionPointer)), 0, getCategoryScrollMax());
             return true;
         }
         return false;
@@ -204,6 +242,8 @@ public class EmojiSelectionGui extends IDrawableGuiListener {
     public void toggleSelectionArea() {
         Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
         showingSelectionArea = !showingSelectionArea;
+        draggingEmojiScrollbar = false;
+        draggingCategoryScrollbar = false;
     }
 
     @Override
@@ -298,6 +338,65 @@ public class EmojiSelectionGui extends IDrawableGuiListener {
 
     public int getLineAmount() {
         return fieldWidget.getValue().isEmpty() ? ClientEmojiHandler.lineAmount : filteredEmojis.size();
+    }
+
+    private int getCategoryScrollMax() {
+        return Math.max(0, ClientEmojiHandler.CATEGORIES.size() - 7);
+    }
+
+    private int getSelectionScrollMax() {
+        return Math.max(1, getLineAmount() - 5);
+    }
+
+    private int getEmojiScrollbarTravel() {
+        return Math.max(0, emojiInfoArea.getY() - categorySelectionArea.getY() - 5);
+    }
+
+    private int getCategoryScrollbarTravel() {
+        return Math.max(0, categorySelectionArea.getHeight() - 10);
+    }
+
+    private int getEmojiScrollbarY() {
+        int max = getSelectionScrollMax();
+        if (max <= 1) return categorySelectionArea.getY();
+        return categorySelectionArea.getY() + Math.round((selectionPointer - 1) * getEmojiScrollbarTravel() / (float) (max - 1));
+    }
+
+    private int getCategoryScrollbarY() {
+        int max = getCategoryScrollMax();
+        if (max == 0) return categorySelectionArea.getY() + 2;
+        return categorySelectionArea.getY() + 2 + Math.round(categoryPointer * getCategoryScrollbarTravel() / (float) max);
+    }
+
+    private Rect2i getEmojiScrollbarTrack() {
+        return new Rect2i(selectionArea.getX() + selectionArea.getWidth() - 4, categorySelectionArea.getY(), 5, getEmojiScrollbarTravel() + 5);
+    }
+
+    private Rect2i getCategoryScrollbarTrack() {
+        return new Rect2i(categorySelectionArea.getX() + categorySelectionArea.getWidth() - 4, categorySelectionArea.getY() + 2, 5, getCategoryScrollbarTravel() + 5);
+    }
+
+    private void setEmojiScrollFromMouse(double mouseY) {
+        int max = getSelectionScrollMax();
+        int travel = getEmojiScrollbarTravel();
+        if (max <= 1 || travel == 0) {
+            selectionPointer = 1;
+        } else {
+            double progress = Mth.clamp((mouseY - categorySelectionArea.getY() - 2.5D) / travel, 0.0D, 1.0D);
+            selectionPointer = 1 + (int) Math.round(progress * (max - 1));
+        }
+        categoryPointer = Mth.clamp(ClientEmojiHandler.CATEGORIES.indexOf(getCategory(selectionPointer)), 0, getCategoryScrollMax());
+    }
+
+    private void setCategoryScrollFromMouse(double mouseY) {
+        int max = getCategoryScrollMax();
+        int travel = getCategoryScrollbarTravel();
+        if (max == 0 || travel == 0) {
+            categoryPointer = 0;
+        } else {
+            double progress = Mth.clamp((mouseY - categorySelectionArea.getY() - 4.5D) / travel, 0.0D, 1.0D);
+            categoryPointer = (int) Math.round(progress * max);
+        }
     }
 
     public EmojiCategory getCategory(int line) {

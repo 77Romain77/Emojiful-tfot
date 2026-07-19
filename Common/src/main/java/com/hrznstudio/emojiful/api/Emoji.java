@@ -28,7 +28,6 @@ public class Emoji implements Predicate<String> {
     public static final ResourceLocation noSignal_texture = new ResourceLocation(Constants.MOD_ID, "textures/gui/26d4.png");
     public static final ResourceLocation error_texture = new ResourceLocation(Constants.MOD_ID, "textures/gui/26d4.png");
 
-    public static final AtomicInteger threadDownloadCounter = new AtomicInteger(0);
     public static final AtomicInteger threadFileLoaderCounter = new AtomicInteger(0);
     public String name;
     public List<String> strings = new ArrayList<>();
@@ -129,17 +128,19 @@ public class Emoji implements Predicate<String> {
     }
 
     private void loadImage() {
-        File cache = getCache();
-        if (cache.exists()) {
+        if (imageExists()) {
             if (getUrl().endsWith(".gif") && Services.CONFIG.loadGifEmojis()) {
                 if (gifLoaderThread == null) {
-                    gifLoaderThread = new Thread("Emojiful Texture Downloader #" + threadDownloadCounter.incrementAndGet()) {
+                    gifLoaderThread = new Thread("Emojiful Texture Loader #" + threadFileLoaderCounter.incrementAndGet()) {
                         @Override
                         public void run() {
-                            try {
-                                loadTextureFrames(EmojiUtil.splitGif(cache));
+                            try (InputStream input = openImageStream()) {
+                                loadTextureFrames(EmojiUtil.splitGif(input));
                             } catch (IOException e) {
-                                e.printStackTrace();
+                                Constants.LOG.error("Unable to load local GIF emoji {}", getUrl(), e);
+                                Emoji.this.frames = new ArrayList<>();
+                                Emoji.this.frames.add(error_texture);
+                                Emoji.this.finishedLoading = true;
                             }
                         }
                     };
@@ -147,15 +148,20 @@ public class Emoji implements Predicate<String> {
                     this.gifLoaderThread.start();
                 }
             } else {
-                try {
-                    DownloadImageData imageData = new DownloadImageData(ImageIO.read(cache), loading_texture);
+                try (InputStream input = openImageStream()) {
+                    BufferedImage bufferedImage = ImageIO.read(input);
+                    if (bufferedImage == null) throw new IOException("Unsupported or invalid emoji image: " + getUrl());
+                    DownloadImageData imageData = new DownloadImageData(bufferedImage, loading_texture);
                     ResourceLocation resourceLocation = new ResourceLocation(Constants.MOD_ID, "texures/emoji/" + name.toLowerCase().replaceAll("[^a-z0-9/._-]", "") + "_" + version);
                     Minecraft.getInstance().getTextureManager().register(resourceLocation, imageData);
                     img.add(imageData);
                     frames.add(resourceLocation);
                     this.finishedLoading = true;
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    Constants.LOG.error("Unable to load local emoji image {}", getUrl(), e);
+                    this.frames = new ArrayList<>();
+                    this.frames.add(error_texture);
+                    this.finishedLoading = true;
                 }
             }
         } else {
@@ -171,6 +177,15 @@ public class Emoji implements Predicate<String> {
 
     public File getCache() {
         return new File("emojiful/cache/" + name + "-" + version);
+    }
+
+    protected boolean imageExists() {
+        File image = getCache();
+        return image != null && image.isFile();
+    }
+
+    protected InputStream openImageStream() throws IOException {
+        return new FileInputStream(getCache());
     }
 
     public void loadTextureFrames(List<Pair<BufferedImage, Integer>> framesPair) {

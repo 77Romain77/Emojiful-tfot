@@ -28,6 +28,10 @@ jobs:
           repository: iamcal/emoji-data
           ref: 097705020bcf82331c9ef10df3425aad15f5043c
           path: _emoji_sources/emoji-data
+          sparse-checkout: |
+            emoji.json
+            img-twitter-64
+          sparse-checkout-cone-mode: false
 
       - name: Checkout Emojiful custom assets
         uses: actions/checkout@v4
@@ -54,15 +58,15 @@ jobs:
       - name: Build Forge mod JAR
         run: ./gradlew :Forge:reobfShadowJar -PforgeOnly --stacktrace
 
-      - name: Install datapack generator dependency
+      - name: Install local emoji pack generator dependency
         run: python -m pip install --disable-pip-version-check PyYAML==6.0.2
 
-      - name: Build server emoji datapack
+      - name: Build client local emoji pack
         run: >-
-          python tools/generate_emoji_datapack.py
+          python tools/generate_local_emoji_pack.py
           --emoji-data _emoji_sources/emoji-data
           --custom-assets _emoji_sources/emojiful-assets
-          --output buildOutput/TFOT-Emojiful-Datapack-1.20.1.zip
+          --output buildOutput/TFOT-Emojiful-Local-Emojis-1.20.1.zip
 
       - name: Upload mod JARs
         uses: actions/upload-artifact@v4
@@ -75,10 +79,10 @@ jobs:
             !Forge/build/libs/*-sources.jar
             !Forge/build/libs/*-javadoc.jar
 
-      - name: Upload server datapack
+      - name: Upload client local emoji pack
         uses: actions/upload-artifact@v4
         with:
-          name: TFOT-Emojiful-Datapack-1.20.1-${{ github.sha }}
+          name: TFOT-Emojiful-Local-Emojis-1.20.1-${{ github.sha }}
           if-no-files-found: error
           retention-days: 30
-          path: buildOutput/TFOT-Emojiful-Datapack-1.20.1.zip
+          path: buildOutput/TFOT-Emojiful-Local-Emojis-1.20.1.zip

@@ -3,10 +3,9 @@ package com.hrznstudio.emojiful.gui;
 import com.hrznstudio.emojiful.CommonClass;
 import com.hrznstudio.emojiful.Constants;
 import com.hrznstudio.emojiful.platform.Services;
-import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.ChatScreen;
-import org.lwjgl.glfw.GLFW;
 
 public class EmojifulChatScreen extends ChatScreen {
 
@@ -20,6 +19,7 @@ public class EmojifulChatScreen extends ChatScreen {
     @Override
     protected void init() {
         super.init();
+        ((EmojiFontEditBox) this.input).emojiful$setFont(Minecraft.getInstance().font);
         if (!Constants.error) {
             if (Services.CONFIG.showEmojiAutocomplete()) emojiSuggestionHelper = new EmojiSuggestionHelper(this);
             if (Services.CONFIG.showEmojiSelector()) emojiSelectionGui = new EmojiSelectionGui(this);
@@ -67,6 +67,22 @@ public class EmojifulChatScreen extends ChatScreen {
             return true;
         }
         return super.mouseClicked(x, y, button);
+    }
+
+    @Override
+    public boolean mouseDragged(double x, double y, int button, double dragX, double dragY) {
+        if (emojiSelectionGui != null && emojiSelectionGui.mouseDragged(x, y, button, dragX, dragY)) {
+            return true;
+        }
+        return super.mouseDragged(x, y, button, dragX, dragY);
+    }
+
+    @Override
+    public boolean mouseReleased(double x, double y, int button) {
+        if (emojiSelectionGui != null && emojiSelectionGui.mouseReleased(x, y, button)) {
+            return true;
+        }
+        return super.mouseReleased(x, y, button);
     }
 
     @Override

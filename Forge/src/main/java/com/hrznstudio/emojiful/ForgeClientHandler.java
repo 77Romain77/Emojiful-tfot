@@ -6,15 +6,10 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.ChatScreen;
 import net.minecraft.client.gui.screens.InBedChatScreen;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraftforge.client.event.RecipesUpdatedEvent;
 import net.minecraftforge.client.event.ScreenEvent;
 
 
 public class ForgeClientHandler {
-
-    public static void onRecipesUpdated(final RecipesUpdatedEvent event) {
-        CommonClass.onRecipesUpdated(event.getRecipeManager());
-    }
 
     public static void hijackScreen(final ScreenEvent.Opening event) {
         final Screen newScreen = event.getNewScreen();
